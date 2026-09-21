@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="&#33590;&#33590;&#26426;" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-touch-fullscreen" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon-v2.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icon-192-v2.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png" sizes="180x180" />
+    <title>&#33590;&#33590;&#26426;</title>
+    <script>
+      /* iOS home-screen mode reports documentElement.clientHeight ~59px short; use innerHeight when it clearly does */
+      (function () {
+        try {
+          if (navigator.standalone !== true) return;
+          var desc = Object.getOwnPropertyDescriptor(Element.prototype, "clientHeight");
+          if (!desc || !desc.get) return;
+          Object.defineProperty(document.documentElement, "clientHeight", {
+            configurable: true,
+            get: function () {
+              var real = desc.get.call(this), ih = window.innerHeight, vv = window.visualViewport;
+              return vv && real < ih - 20 && Math.abs(vv.height - ih) <= 2 ? ih : real;
+            }
+          });
+        } catch (e) {}
+      })();
+    </script>
+    <style>
+      /* iOS: keep the home page below the status bar */
+      html body .phone:not(.pwa-home-layout-v1):not(.pwa-home-layout-v3):not(.pwa-home-layout-v5-recovery) .cha-home {
+        padding-top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      /* iOS home-screen mode: keep the app's own "recovery" home layout on.
+         The router remounts the whole shell on every route change, so this must keep watching. */
+      (function () {
+        if (navigator.standalone !== true) return;
+        setInterval(function () {
+          var ph = document.querySelector(".phone");
+          if (
+            ph &&
+            ph.classList.contains("pwa-home-recovery-candidate") &&
+            ph.classList.contains("native-mobile-viewport") &&
+            !ph.classList.contains("pwa-home-layout-v3") &&
+            !ph.classList.contains("pwa-home-layout-v5-recovery") &&
+            document.querySelector(".cha-home")
+          ) {
+            window.dispatchEvent(new CustomEvent("chacha:home-geometry-recovery", { detail: { recover: true } }));
+          }
+        }, 120);
+      })();
+    </script>
+  </body>
+</html>
